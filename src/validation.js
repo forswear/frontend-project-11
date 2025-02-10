@@ -1,9 +1,8 @@
 import onChange from 'on-change';
 import * as yup from 'yup';
-
+import i18next from './locales/i18n';
 
 let existingFeeds = [];
-
 const reactiveExistingFeeds = onChange(existingFeeds, (path, value) => {
   console.log(`Изменение в existingFeeds: ${path} -> ${value}`);
 });
@@ -11,17 +10,16 @@ const reactiveExistingFeeds = onChange(existingFeeds, (path, value) => {
 const validationSchema = yup.object().shape({
   url: yup
     .string()
-    .url('Неверный формат URL')
-    .test('is-unique', 'RSS уже существует', (value) => {
+    .url(i18next.t('errors.invalidUrl'))
+    .test('is-unique', i18next.t('errors.duplicateFeed'), (value) => {
       return !reactiveExistingFeeds.includes(value);
     })
-    .required('Поле не должно быть пустым'),
+    .required(i18next.t('errors.required')),
 });
 
 export default function setupFormValidation(formElement, feedbackElement, inputElement) {
   const validateAndSubmit = (event) => {
     event.preventDefault();
-
     feedbackElement.textContent = '';
     inputElement.classList.remove('is-invalid');
 
@@ -29,7 +27,7 @@ export default function setupFormValidation(formElement, feedbackElement, inputE
     const { url } = Object.fromEntries(formData.entries());
 
     if (!url.trim()) {
-      feedbackElement.textContent = 'Поле не должно быть пустым';
+      feedbackElement.textContent = i18next.t('errors.required');
       inputElement.classList.add('is-invalid');
       return;
     }
@@ -61,11 +59,9 @@ export default function setupFormValidation(formElement, feedbackElement, inputE
 
   inputElement.addEventListener('change', () => {
     const value = inputElement.value.trim();
-
     if (!value) {
       return;
     }
-
     validationSchema
       .validate({ url: value }, { abortEarly: false })
       .then(() => {
