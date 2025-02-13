@@ -2,7 +2,9 @@ import { fetchAndParseRSS } from './rss-parser';
 import * as yup from 'yup';
 import i18next from './locales/i18n';
 import onChange from 'on-change';
-import { renderFeeds, renderPosts } from './view';
+import { renderPosts } from './view';
+
+const updateInterval = 5000;
 
 let existingFeeds = [];
 const reactiveExistingFeeds = onChange(existingFeeds, (path, value) => {
@@ -19,6 +21,37 @@ const validationSchema = yup.object().shape({
     .required(i18next.t('errors.required')),
 });
 
+function checkForUpdates(feedsContainer, postsContainer, feedsData) {
+  const updatePromises = feedsData.map((feed) => {
+    return new Promise((resolve) => {
+      fetchAndParseRSS(feed.url)
+        .then((newFeedData) => {
+          const newPosts = newFeedData.posts.filter(
+            (post) => !feed.posts.some((existingPost) => existingPost.id === post.id)
+          );
+
+          if (newPosts.length > 0) {
+            feed.posts.push(...newPosts);
+
+            renderPosts(postsContainer, newPosts);
+
+            console.log(`Обнаружено ${newPosts.length} новых постов в фиде "${feed.title}"`);
+          }
+
+          resolve();
+        })
+        .catch((error) => {
+          console.error(`Ошибка при обновлении фида "${feed.title}":`, error.message);
+          resolve();
+        });
+    });
+  });
+
+  return Promise.all(updatePromises).then(() => {
+    setTimeout(() => checkForUpdates(feedsContainer, postsContainer, feedsData), updateInterval);
+  });
+}
+
 export default function setupFormValidation(
   formElement,
   feedbackElement,
@@ -26,7 +59,9 @@ export default function setupFormValidation(
   feedsContainer,
   postsContainer
 ) {
-  const validateAndSubmit = async (event) => {
+  let feedsData = [];
+
+  const validateAndSubmit = (event) => {
     event.preventDefault();
     feedbackElement.textContent = '';
     inputElement.classList.remove('is-invalid');
@@ -40,36 +75,43 @@ export default function setupFormValidation(
       return;
     }
 
-    try {
-      await validationSchema.validate({ url }, { abortEarly: false });
+    validationSchema
+      .validate({ url }, { abortEarly: false })
+      .then(() => {
+        feedbackElement.textContent = i18next.t('loading');
 
-      feedbackElement.textContent = i18next.t('loading');
-      const feedData = await fetchAndParseRSS(url);
+        return fetchAndParseRSS(url);
+      })
+      .then((feedData) => {
+        const feedItem = document.createElement('div');
+        feedItem.classList.add('feed');
+        feedItem.innerHTML = `
+          <h3>${feedData.title}</h3>
+          <p>${feedData.description}</p>
+        `;
+        feedsContainer.appendChild(feedItem);
 
-      const feedItem = document.createElement('div');
-      feedItem.classList.add('feed');
-      feedItem.innerHTML = `
-        <h3>${feedData.title}</h3>
-        <p>${feedData.description}</p>
-      `;
-      feedsContainer.appendChild(feedItem);
+        feedsData.push({ ...feedData, url });
 
-      renderPosts(postsContainer, feedData.posts);
+        renderPosts(postsContainer, feedData.posts);
 
-      reactiveExistingFeeds.push(url.trim());
-      formElement.reset();
-      inputElement.focus();
-      feedbackElement.textContent = '';
+        reactiveExistingFeeds.push(url.trim());
+        formElement.reset();
+        inputElement.focus();
+        feedbackElement.textContent = '';
 
-      renderFeeds(feedsContainer, [feedData]);
-    } catch (error) {
-      if (error instanceof yup.ValidationError) {
-        feedbackElement.textContent = error.errors[0];
-      } else {
-        feedbackElement.textContent = i18next.t('errors.failedToLoad');
-      }
-      inputElement.classList.add('is-invalid');
-    }
+        if (feedsData.length === 1) {
+          checkForUpdates(feedsContainer, postsContainer, feedsData);
+        }
+      })
+      .catch((error) => {
+        if (error instanceof yup.ValidationError) {
+          feedbackElement.textContent = error.errors[0];
+        } else {
+          feedbackElement.textContent = i18next.t('errors.failedToLoad');
+        }
+        inputElement.classList.add('is-invalid');
+      });
   };
 
   formElement.addEventListener('submit', validateAndSubmit);
