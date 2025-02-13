@@ -19,6 +19,7 @@ const parseRSS = (xmlString) => {
     title: item.querySelector('title')?.textContent || 'No Title',
     link: item.querySelector('link')?.textContent || '#',
     pubDate: item.querySelector('pubDate')?.textContent || '',
+    description: item.querySelector('description')?.textContent || 'Описание отсутствует',
   }));
 
   return {

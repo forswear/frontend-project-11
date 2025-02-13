@@ -21,7 +21,7 @@ const validationSchema = yup.object().shape({
     .required(i18next.t('errors.required')),
 });
 
-function checkForUpdates(feedsContainer, postsContainer, feedsData) {
+function checkForUpdates(feedsContainer, postsContainer, feedsData, readPosts) {
   const updatePromises = feedsData.map((feed) => {
     return new Promise((resolve) => {
       fetchAndParseRSS(feed.url)
@@ -32,9 +32,7 @@ function checkForUpdates(feedsContainer, postsContainer, feedsData) {
 
           if (newPosts.length > 0) {
             feed.posts.push(...newPosts);
-
-            renderPosts(postsContainer, newPosts);
-
+            renderPosts(postsContainer, feed.posts, readPosts);
             console.log(`Обнаружено ${newPosts.length} новых постов в фиде "${feed.title}"`);
           }
 
@@ -48,7 +46,7 @@ function checkForUpdates(feedsContainer, postsContainer, feedsData) {
   });
 
   return Promise.all(updatePromises).then(() => {
-    setTimeout(() => checkForUpdates(feedsContainer, postsContainer, feedsData), updateInterval);
+    setTimeout(() => checkForUpdates(feedsContainer, postsContainer, feedsData, readPosts), updateInterval);
   });
 }
 
@@ -60,6 +58,7 @@ export default function setupFormValidation(
   postsContainer
 ) {
   let feedsData = [];
+  const readPosts = new Set();
 
   const validateAndSubmit = (event) => {
     event.preventDefault();
@@ -93,7 +92,7 @@ export default function setupFormValidation(
 
         feedsData.push({ ...feedData, url });
 
-        renderPosts(postsContainer, feedData.posts);
+        renderPosts(postsContainer, feedData.posts, readPosts);
 
         reactiveExistingFeeds.push(url.trim());
         formElement.reset();
@@ -101,7 +100,7 @@ export default function setupFormValidation(
         feedbackElement.textContent = '';
 
         if (feedsData.length === 1) {
-          checkForUpdates(feedsContainer, postsContainer, feedsData);
+          checkForUpdates(feedsContainer, postsContainer, feedsData, readPosts);
         }
       })
       .catch((error) => {
