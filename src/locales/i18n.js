@@ -1,4 +1,3 @@
-// src/locales/i18n.js
 import i18next from 'i18next';
 
 const resources = {
@@ -6,13 +5,16 @@ const resources = {
     translation: {
       title: 'RSS Aggregator',
       description: 'Start reading RSS today! It is easy and beautiful.',
-      placeholder: 'RSS Link',
-      submitButton: 'Add',
+      label: 'RSS Link',
+      add: 'Add',
       example: 'Example: https://lorem-rss.hexlet.app/feed',
+      loading: 'Loading...',
       errors: {
         required: 'Field must not be empty',
         invalidUrl: 'Invalid URL format',
         duplicateFeed: 'RSS already exists',
+        invalidRss: 'Resource does not contain valid RSS',
+        networkError: 'Network error occurred',
       },
     },
   },
@@ -20,13 +22,16 @@ const resources = {
     translation: {
       title: 'RSS Агрегатор',
       description: 'Начните читать RSS сегодня! Это легко, это красиво.',
-      placeholder: 'Ссылка RSS',
-      submitButton: 'Добавить',
+      label: 'Ссылка RSS',
+      add: 'Добавить',
       example: 'Пример: https://lorem-rss.hexlet.app/feed',
+      loading: 'Загрузка...',
       errors: {
         required: 'Поле не должно быть пустым',
         invalidUrl: 'Неверный формат URL',
         duplicateFeed: 'RSS уже существует',
+        invalidRss: 'Ресурс не содержит валидный RSS',
+        networkError: 'Ошибка сети',
       },
     },
   },
