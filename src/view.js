@@ -11,60 +11,59 @@ export const renderPosts = (container, posts, readPosts) => {
 
   const postsList = container.querySelector('ul');
 
-  const existingPosts = Array.from(postsList.children);
-  existingPosts.forEach((postItem) => {
-    const postId = postItem.querySelector('a').dataset.id;
-    if (!posts.some((post) => post.id === postId)) {
-      postItem.remove();
-    }
+  postsList.innerHTML = '';
+
+  const sortedPosts = posts.sort((a, b) => {
+    const dateA = a.pubDate ? new Date(a.pubDate) : new Date(0);
+    const dateB = b.pubDate ? new Date(b.pubDate) : new Date(0);
+    return dateB - dateA;
   });
 
-  posts.forEach((post) => {
-    const existingPostItem = postsList.querySelector(`a[data-id="${post.id}"]`);
-    if (!existingPostItem) {
-      const postItem = document.createElement('li');
-      postItem.classList.add(
-        'list-group-item',
-        'd-flex',
-        'justify-content-between',
-        'align-items-start',
-        'border-0',
-        'border-end-0'
-      );
+  const lastTenPosts = sortedPosts.slice(0, 10);
 
-      const postLink = document.createElement('a');
-      postLink.href = post.link;
-      postLink.classList.add(readPosts.has(post.id) ? 'fw-normal' : 'fw-bold');
-      postLink.dataset.id = post.id;
-      postLink.target = '_blank';
-      postLink.rel = 'noopener noreferrer';
-      postLink.textContent = `${post.title} ${post.pubDate || ''}`;
+  lastTenPosts.forEach((post) => {
+    const postItem = document.createElement('li');
+    postItem.classList.add(
+      'list-group-item',
+      'd-flex',
+      'justify-content-between',
+      'align-items-start',
+      'border-0',
+      'border-end-0'
+    );
 
-      const viewButton = document.createElement('button');
-      viewButton.type = 'button';
-      viewButton.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-      viewButton.dataset.id = post.id;
-      viewButton.dataset.bsToggle = 'modal';
-      viewButton.dataset.bsTarget = '#modal';
-      viewButton.textContent = 'Просмотр';
+    const postLink = document.createElement('a');
+    postLink.href = post.link;
+    postLink.classList.add(readPosts.has(post.id) ? 'fw-normal' : 'fw-bold');
+    postLink.dataset.id = post.id;
+    postLink.target = '_blank';
+    postLink.rel = 'noopener noreferrer';
+    postLink.textContent = `${post.title} ${post.pubDate || ''}`;
 
-      viewButton.addEventListener('click', () => {
-        const modalTitle = document.querySelector('.modal-title');
-        const modalBody = document.querySelector('.modal-body');
-        const fullArticleLink = document.querySelector('.full-article');
-      
-        modalTitle.textContent = post.title;
-        modalBody.textContent = post.description || 'Описание отсутствует';
-        fullArticleLink.href = post.link;
-      
-        readPosts.add(post.id);
-        postLink.classList.remove('fw-bold');
-        postLink.classList.add('fw-normal');
-      });
+    const viewButton = document.createElement('button');
+    viewButton.type = 'button';
+    viewButton.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+    viewButton.dataset.id = post.id;
+    viewButton.dataset.bsToggle = 'modal';
+    viewButton.dataset.bsTarget = '#modal';
+    viewButton.textContent = 'Просмотр';
 
-      postItem.appendChild(postLink);
-      postItem.appendChild(viewButton);
-      postsList.appendChild(postItem);
-    }
+    viewButton.addEventListener('click', () => {
+      const modalTitle = document.querySelector('.modal-title');
+      const modalBody = document.querySelector('.modal-body');
+      const fullArticleLink = document.querySelector('.full-article');
+    
+      modalTitle.textContent = post.title;
+      modalBody.textContent = post.description || 'Описание отсутствует';
+      fullArticleLink.href = post.link;
+    
+      readPosts.add(post.id);
+      postLink.classList.remove('fw-bold');
+      postLink.classList.add('fw-normal');
+    });
+
+    postItem.appendChild(postLink);
+    postItem.appendChild(viewButton);
+    postsList.appendChild(postItem);
   });
 };
