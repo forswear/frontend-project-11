@@ -10,7 +10,6 @@ export const renderPosts = (container, posts, readPosts) => {
   }
 
   const postsList = container.querySelector('ul');
-
   postsList.innerHTML = '';
 
   const sortedPosts = posts.sort((a, b) => {
@@ -48,22 +47,39 @@ export const renderPosts = (container, posts, readPosts) => {
     viewButton.dataset.bsTarget = '#modal';
     viewButton.textContent = 'Просмотр';
 
-    viewButton.addEventListener('click', () => {
-      const modalTitle = document.querySelector('.modal-title');
-      const modalBody = document.querySelector('.modal-body');
-      const fullArticleLink = document.querySelector('.full-article');
-    
-      modalTitle.textContent = post.title;
-      modalBody.textContent = post.description || 'Описание отсутствует';
-      fullArticleLink.href = post.link;
-    
-      readPosts.add(post.id);
-      postLink.classList.remove('fw-bold');
-      postLink.classList.add('fw-normal');
-    });
-
     postItem.appendChild(postLink);
     postItem.appendChild(viewButton);
     postsList.appendChild(postItem);
+  });
+};
+
+export const renderFeeds = (container, feeds) => {
+  container.innerHTML = '';
+
+  if (feeds.length === 0) {
+    return;
+  }
+
+  const feedsHeader = document.createElement('h2');
+  feedsHeader.textContent = 'Ленты';
+  container.appendChild(feedsHeader);
+
+  const feedsList = document.createElement('ul');
+  feedsList.classList.add('list-group', 'border-0', 'rounded-0');
+  container.appendChild(feedsList);
+
+  feeds.forEach((feed) => {
+    const feedItem = document.createElement('li');
+    feedItem.classList.add('list-group-item', 'border-0', 'border-end-0');
+
+    const feedTitle = document.createElement('h3');
+    feedTitle.textContent = feed.title;
+
+    const feedDescription = document.createElement('p');
+    feedDescription.textContent = feed.description;
+
+    feedItem.appendChild(feedTitle);
+    feedItem.appendChild(feedDescription);
+    feedsList.appendChild(feedItem);
   });
 };

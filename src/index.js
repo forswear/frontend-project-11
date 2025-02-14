@@ -8,5 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const feedsContainer = document.querySelector('.feeds');
   const postsContainer = document.querySelector('.posts');
 
-  setupFormValidation(form, feedback, input, feedsContainer, postsContainer);
+  setupFormValidation({
+    formElement: form,
+    feedbackElement: feedback,
+    inputElement: input,
+    feedsContainer,
+    postsContainer,
+  });
+
 });

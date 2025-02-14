@@ -4,10 +4,10 @@ import i18next from 'i18next';
 const parseRSS = (xmlString) => {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
-
   const parseError = xmlDoc.querySelector('parsererror');
+
   if (parseError) {
-    throw new Error('Invalid RSS format');
+    throw new Error(i18next.t('errors.invalidRssFormat'));
   }
 
   const channel = xmlDoc.querySelector('channel');
@@ -41,6 +41,9 @@ export const fetchAndParseRSS = async (url) => {
     const xmlString = response.data.contents;
     return parseRSS(xmlString);
   } catch (error) {
+    if (error.message.includes('Invalid RSS format')) {
+      throw new Error(error.message);
+    }
     throw new Error(i18next.t('errors.networkError'));
   }
 };
