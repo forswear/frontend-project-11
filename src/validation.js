@@ -2,44 +2,45 @@ import { fetchAndParseRSS } from './rss-parser';
 import * as yup from 'yup';
 import i18next from './locales/i18n';
 import onChange from 'on-change';
-import { renderPosts, renderFeeds } from './view';
+import { renderPosts, renderFeeds, renderModal, renderFormFeedback } from './view';
 
-export const state = onChange(
-  {
+export const createState = (feedsContainer, postsContainer, feedbackElement, inputElement) => {
+  const initialState = {
     feedsData: [],
+    allPosts: [],
     readPosts: new Set(),
     formError: null,
-  },
-  (path, value) => {
+    isUpdating: false,
+    currentPost: null,
+  };
+
+  const state = onChange(initialState, (path, value) => {
     if (path === 'feedsData') {
-      const feedsContainer = document.querySelector('.feeds');
-      const postsContainer = document.querySelector('.posts');
+      state.allPosts = state.feedsData.flatMap((feed) => feed.posts);
       renderFeeds(feedsContainer, state.feedsData);
-      renderPosts(postsContainer, state.feedsData.flatMap((feed) => feed.posts), state.readPosts);
+      renderPosts(postsContainer, state.allPosts, state.readPosts);
     }
     if (path === 'readPosts') {
-      const postsContainer = document.querySelector('.posts');
-      renderPosts(postsContainer, state.feedsData.flatMap((feed) => feed.posts), state.readPosts);
+      renderPosts(postsContainer, state.allPosts, state.readPosts);
     }
     if (path === 'formError') {
-      const feedbackElement = document.querySelector('.feedback');
-      const inputElement = document.getElementById('url-input');
-
-      if (value) {
-        feedbackElement.textContent = value;
-        inputElement.classList.add('is-invalid');
-      } else {
-        feedbackElement.textContent = '';
-        inputElement.classList.remove('is-invalid');
-      }
+      renderFormFeedback(inputElement, feedbackElement, value);
     }
-  }
-);
+    if (path === 'currentPost') {
+      renderModal(state.currentPost);
+    }
+  });
+
+  return state;
+};
 
 const updateInterval = 5000;
-let isUpdating = false;
 
-function checkForUpdates() {
+function checkForUpdates(state) {
+  if (state.feedsData.length === 0) {
+    return;
+  }
+
   const updatePromises = state.feedsData.map((feed) =>
     fetchAndParseRSS(feed.url)
       .then((newFeedData) => {
@@ -48,6 +49,7 @@ function checkForUpdates() {
         );
         if (newPosts.length > 0) {
           feed.posts.push(...newPosts);
+          state.allPosts = state.feedsData.flatMap((feed) => feed.posts);
           console.log(`Обнаружено ${newPosts.length} новых постов в фиде "${feed.title}"`);
         }
       })
@@ -56,32 +58,22 @@ function checkForUpdates() {
       })
   );
 
-  return Promise.all(updatePromises).then(() => {
-    setTimeout(checkForUpdates, updateInterval);
+  Promise.all(updatePromises).then(() => {
+    setTimeout(() => checkForUpdates(state), updateInterval);
   });
 }
 
-const setupPostViewHandler = () => {
-  const postsContainer = document.querySelector('.posts');
-
+const setupPostViewHandler = (postsContainer, state) => {
   postsContainer.addEventListener('click', (event) => {
     if (event.target.tagName === 'BUTTON') {
       const postId = event.target.dataset.id;
-
-      const post = state.feedsData.flatMap((feed) => feed.posts).find((p) => p.id === postId);
+      const post = state.allPosts.find((p) => p.id === postId);
 
       if (post) {
-        const modalTitle = document.querySelector('.modal-title');
-        const modalBody = document.querySelector('.modal-body');
-        const fullArticleLink = document.querySelector('.full-article');
-
-        modalTitle.textContent = post.title;
-        modalBody.textContent = post.description || 'Описание отсутствует';
-        fullArticleLink.href = post.link;
-
+        state.currentPost = post;
         state.readPosts.add(postId);
 
-        const postLink = document.querySelector(`a[data-id="${postId}"]`);
+        const postLink = postsContainer.querySelector(`a[data-id="${postId}"]`);
         if (postLink) {
           postLink.classList.remove('fw-bold');
           postLink.classList.add('fw-normal');
@@ -98,6 +90,8 @@ export default function setupFormValidation({
   feedsContainer,
   postsContainer,
 }) {
+  const state = createState(feedsContainer, postsContainer, feedbackElement, inputElement);
+
   const validationSchema = yup.object().shape({
     url: yup
       .string()
@@ -116,10 +110,10 @@ export default function setupFormValidation({
   const validateAndSubmit = (event) => {
     event.preventDefault();
     resetFormState();
-
+  
     const formData = new FormData(formElement);
     const { url } = Object.fromEntries(formData.entries());
-
+  
     validationSchema
       .validate({ url }, { abortEarly: false })
       .then(() => {
@@ -128,14 +122,12 @@ export default function setupFormValidation({
       })
       .then((feedData) => {
         state.feedsData = [...state.feedsData, { ...feedData, url: url.trim() }];
+        state.allPosts = state.feedsData.flatMap((feed) => feed.posts);
         formElement.reset();
         inputElement.focus();
         resetFormState();
-
-        if (!isUpdating && state.feedsData.length > 0) {
-          isUpdating = true;
-          checkForUpdates();
-        }
+  
+        checkForUpdates(state);
       })
       .catch((error) => {
         if (error instanceof yup.ValidationError) {
@@ -147,8 +139,6 @@ export default function setupFormValidation({
   };
 
   formElement.addEventListener('submit', validateAndSubmit);
-
   inputElement.addEventListener('input', resetFormState);
-
-  setupPostViewHandler();
+  setupPostViewHandler(postsContainer, state);
 }

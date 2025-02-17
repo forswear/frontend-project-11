@@ -37,10 +37,12 @@ const resources = {
   },
 };
 
-i18next.init({
-  lng: 'ru', // Язык по умолчанию
-  fallbackLng: 'en', // Резервный язык
-  resources,
-});
+export const initI18n = (callback) => {
+  i18next.init({
+    lng: 'ru', // Язык по умолчанию
+    fallbackLng: 'en', // Резервный язык
+    resources,
+  }, callback);
+};
 
 export default i18next;

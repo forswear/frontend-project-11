@@ -1,3 +1,25 @@
+export const renderModal = (post) => {
+  const modalTitle = document.querySelector('.modal-title');
+  const modalBody = document.querySelector('.modal-body');
+  const fullArticleLink = document.querySelector('.full-article');
+
+  if (post) {
+    modalTitle.textContent = post.title;
+    modalBody.textContent = post.description || 'Описание отсутствует';
+    fullArticleLink.href = post.link;
+  }
+};
+
+export const renderFormFeedback = (inputElement, feedbackElement, formError) => {
+  if (formError) {
+    feedbackElement.textContent = formError;
+    inputElement.classList.add('is-invalid');
+  } else {
+    feedbackElement.textContent = '';
+    inputElement.classList.remove('is-invalid');
+  }
+};
+
 export const renderPosts = (container, posts, readPosts) => {
   if (container.innerHTML === '') {
     const postsHeader = document.createElement('h2');
@@ -19,7 +41,6 @@ export const renderPosts = (container, posts, readPosts) => {
   });
 
   const lastTenPosts = sortedPosts.slice(0, 10);
-
   lastTenPosts.forEach((post) => {
     const postItem = document.createElement('li');
     postItem.classList.add(
@@ -37,7 +58,7 @@ export const renderPosts = (container, posts, readPosts) => {
     postLink.dataset.id = post.id;
     postLink.target = '_blank';
     postLink.rel = 'noopener noreferrer';
-    postLink.textContent = `${post.title} ${post.pubDate || ''}`;
+    postLink.textContent = post.title + (post.pubDate ? ` (${post.pubDate})` : '');
 
     const viewButton = document.createElement('button');
     viewButton.type = 'button';
@@ -61,11 +82,11 @@ export const renderFeeds = (container, feeds) => {
   }
 
   const feedsHeader = document.createElement('h2');
-  feedsHeader.textContent = 'Ленты';
+  feedsHeader.textContent = 'Посты';
   container.appendChild(feedsHeader);
 
   const feedsList = document.createElement('ul');
-  feedsList.classList.add('list-group', 'border-0', 'rounded-0');
+  feedsList.classList.add('list-group', 'border-1', 'rounded-0');
   container.appendChild(feedsList);
 
   feeds.forEach((feed) => {
