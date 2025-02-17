@@ -82,7 +82,7 @@ export const renderFeeds = (container, feeds) => {
   }
 
   const feedsHeader = document.createElement('h2');
-  feedsHeader.textContent = 'Посты';
+  feedsHeader.textContent = 'Фиды';
   container.appendChild(feedsHeader);
 
   const feedsList = document.createElement('ul');
