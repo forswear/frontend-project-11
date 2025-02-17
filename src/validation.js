@@ -138,10 +138,10 @@ export default function setupFormValidation({
     event.preventDefault();
     resetFormState();
     state.isFormProcessing = true;
-
+  
     const formData = new FormData(formElement);
     const { url } = Object.fromEntries(formData.entries());
-
+  
     try {
       await validationSchema.validate({ url }, { abortEarly: false });
       state.formError = i18next.t('loading');
@@ -151,17 +151,17 @@ export default function setupFormValidation({
       formElement.reset();
       inputElement.focus();
       resetFormState();
-      state.successMessage = i18next.t('rssAdded'); // Устанавливаем сообщение об успехе
+      state.successMessage = i18next.t('rssAdded');
       checkForUpdates(state);
     } catch (error) {
       state.isFormProcessing = false;
       if (error instanceof yup.ValidationError) {
         state.formError = error.errors[0];
       } else {
-        state.formError = error.message;
+        state.formError = error.message; // Здесь ошибка будет передана в состояние
       }
     }
-  };
+  }; 
 
   formElement.addEventListener('submit', validateAndSubmit);
   inputElement.addEventListener('input', resetFormState);

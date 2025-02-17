@@ -7,7 +7,7 @@ const parseRSS = (xmlString) => {
   const parseError = xmlDoc.querySelector('parsererror');
 
   if (parseError) {
-    throw new Error(i18next.t('errors.notRss'));
+    throw new Error(i18next.t('errors.invalidRss'));
   }
 
   const channel = xmlDoc.querySelector('channel');
@@ -46,6 +46,6 @@ export const fetchAndParseRSS = (url) => {
       if (error.message.includes('Invalid RSS format')) {
         throw new Error(error.message);
       }
-      throw new Error(i18next.t('errors.networkErr'));
+      throw new Error(i18next.t('errors.invalidRss'));
     });
 };
