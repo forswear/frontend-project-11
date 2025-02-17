@@ -12,6 +12,7 @@ export const createState = (feedsContainer, postsContainer, feedbackElement, inp
     formError: null,
     isUpdating: false,
     currentPost: null,
+    isFormProcessing: false,
   };
 
   const state = onChange(initialState, (path, value) => {
@@ -34,6 +35,13 @@ export const createState = (feedsContainer, postsContainer, feedbackElement, inp
     }
     if (path === 'currentPost') {
       renderModal(state.currentPost);
+    }
+    if (path === 'isFormProcessing') {
+      if (value) {
+        inputElement.setAttribute('readonly', true);
+      } else {
+        inputElement.removeAttribute('readonly');
+      }
     }
   });
 
@@ -113,37 +121,35 @@ export default function setupFormValidation({
 
   const resetFormState = () => {
     state.formError = null;
+    state.isFormProcessing = false;
   };
 
-  const validateAndSubmit = (event) => {
+  const validateAndSubmit = async (event) => {
     event.preventDefault();
     resetFormState();
+    state.isFormProcessing = true;
 
     const formData = new FormData(formElement);
     const { url } = Object.fromEntries(formData.entries());
 
-    validationSchema
-      .validate({ url }, { abortEarly: false })
-      .then(() => {
-        state.formError = i18next.t('loading');
-        return fetchAndParseRSS(url.trim());
-      })
-      .then((feedData) => {
-        state.feedsData = [...state.feedsData, { ...feedData, url: url.trim() }];
-        state.allPosts = state.feedsData.flatMap((feed) => feed.posts);
-        formElement.reset();
-        inputElement.focus();
-        resetFormState();
-
-        checkForUpdates(state);
-      })
-      .catch((error) => {
-        if (error instanceof yup.ValidationError) {
-          state.formError = error.errors[0];
-        } else {
-          state.formError = error.message;
-        }
-      });
+    try {
+      await validationSchema.validate({ url }, { abortEarly: false });
+      state.formError = i18next.t('loading');
+      const feedData = await fetchAndParseRSS(url.trim());
+      state.feedsData = [...state.feedsData, { ...feedData, url: url.trim() }];
+      state.allPosts = state.feedsData.flatMap((feed) => feed.posts);
+      formElement.reset();
+      inputElement.focus();
+      resetFormState();
+      checkForUpdates(state);
+    } catch (error) {
+      state.isFormProcessing = false;
+      if (error instanceof yup.ValidationError) {
+        state.formError = error.errors[0];
+      } else {
+        state.formError = error.message;
+      }
+    }
   };
 
   formElement.addEventListener('submit', validateAndSubmit);
