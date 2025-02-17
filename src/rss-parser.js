@@ -1,5 +1,5 @@
 import axios from 'axios';
-import i18next from 'i18next';
+import i18next from './locales/i18n';
 
 const parseRSS = (xmlString) => {
   const parser = new DOMParser();
@@ -7,7 +7,7 @@ const parseRSS = (xmlString) => {
   const parseError = xmlDoc.querySelector('parsererror');
 
   if (parseError) {
-    throw new Error(i18next.t('errors.invalidRssFormat'));
+    throw new Error(i18next.t('errors.invalidRss'));
   }
 
   const channel = xmlDoc.querySelector('channel');
@@ -36,13 +36,13 @@ export const fetchAndParseRSS = (url) => {
       url,
       disableCache: true,
     },
-    timeout: 10000,
+    timeout: 5000,
   }).then((response) => {
     const xmlString = response.data.contents;
     return parseRSS(xmlString);
   }).catch((error) => {
     if (error.message.includes('Invalid RSS format')) {
-      throw new Error(i18next.t('errors.invalidRss'));
+      throw new Error(error.message);
     }
     throw new Error(i18next.t('errors.networkError'));
   });

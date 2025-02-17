@@ -10,16 +10,6 @@ export const renderModal = (post) => {
   }
 };
 
-export const renderFormFeedback = (inputElement, feedbackElement, formError) => {
-  if (formError) {
-    feedbackElement.textContent = formError;
-    inputElement.classList.add('is-invalid');
-  } else {
-    feedbackElement.textContent = '';
-    inputElement.classList.remove('is-invalid');
-  }
-};
-
 export const renderPosts = (container, posts, readPosts) => {
   if (container.innerHTML === '') {
     const postsHeader = document.createElement('h2');
@@ -75,11 +65,11 @@ export const renderPosts = (container, posts, readPosts) => {
 };
 
 export const renderFeeds = (container, feeds) => {
-  if (!container || feeds.length === 0) {
+  container.innerHTML = '';
+
+  if (feeds.length === 0) {
     return;
   }
-
-  container.innerHTML = '';
 
   const feedsHeader = document.createElement('h2');
   feedsHeader.textContent = 'Фиды';

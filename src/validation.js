@@ -2,7 +2,7 @@ import { fetchAndParseRSS } from './rss-parser';
 import * as yup from 'yup';
 import i18next from './locales/i18n';
 import onChange from 'on-change';
-import { renderPosts, renderFeeds, renderModal, renderFormFeedback } from './view';
+import { renderPosts, renderFeeds, renderModal } from './view';
 
 export const createState = (feedsContainer, postsContainer, feedbackElement, inputElement) => {
   const initialState = {
@@ -24,7 +24,13 @@ export const createState = (feedsContainer, postsContainer, feedbackElement, inp
       renderPosts(postsContainer, state.allPosts, state.readPosts);
     }
     if (path === 'formError') {
-      renderFormFeedback(inputElement, feedbackElement, value);
+      if (value) {
+        feedbackElement.textContent = value;
+        inputElement.classList.add('is-invalid');
+      } else {
+        feedbackElement.textContent = '';
+        inputElement.classList.remove('is-invalid');
+      }
     }
     if (path === 'currentPost') {
       renderModal(state.currentPost);
@@ -37,9 +43,11 @@ export const createState = (feedsContainer, postsContainer, feedbackElement, inp
 const updateInterval = 5000;
 
 function checkForUpdates(state) {
-  if (state.feedsData.length === 0) {
+  if (state.isUpdating || state.feedsData.length === 0) {
     return;
   }
+
+  state.isUpdating = true;
 
   const updatePromises = state.feedsData.map((feed) =>
     fetchAndParseRSS(feed.url)
@@ -50,7 +58,6 @@ function checkForUpdates(state) {
         if (newPosts.length > 0) {
           feed.posts.push(...newPosts);
           state.allPosts = state.feedsData.flatMap((feed) => feed.posts);
-          console.log(`Обнаружено ${newPosts.length} новых постов в фиде "${feed.title}"`);
         }
       })
       .catch((error) => {
@@ -59,6 +66,7 @@ function checkForUpdates(state) {
   );
 
   Promise.all(updatePromises).then(() => {
+    state.isUpdating = false;
     setTimeout(() => checkForUpdates(state), updateInterval);
   });
 }
@@ -110,10 +118,10 @@ export default function setupFormValidation({
   const validateAndSubmit = (event) => {
     event.preventDefault();
     resetFormState();
-  
+
     const formData = new FormData(formElement);
     const { url } = Object.fromEntries(formData.entries());
-  
+
     validationSchema
       .validate({ url }, { abortEarly: false })
       .then(() => {
