@@ -124,7 +124,7 @@ export default function setupFormValidation({
     state.isFormProcessing = false;
   };
 
-  const validateAndSubmit = async (event) => {
+  const validateAndSubmit = (event) => {
     event.preventDefault();
     resetFormState();
     state.isFormProcessing = true;
@@ -132,24 +132,27 @@ export default function setupFormValidation({
     const formData = new FormData(formElement);
     const { url } = Object.fromEntries(formData.entries());
 
-    try {
-      await validationSchema.validate({ url }, { abortEarly: false });
-      state.formError = i18next.t('loading');
-      const feedData = await fetchAndParseRSS(url.trim());
-      state.feedsData = [...state.feedsData, { ...feedData, url: url.trim() }];
-      state.allPosts = state.feedsData.flatMap((feed) => feed.posts);
-      formElement.reset();
-      inputElement.focus();
-      resetFormState();
-      checkForUpdates(state);
-    } catch (error) {
-      state.isFormProcessing = false;
-      if (error instanceof yup.ValidationError) {
-        state.formError = error.errors[0];
-      } else {
-        state.formError = error.message;
-      }
-    }
+    validationSchema.validate({ url }, { abortEarly: false })
+      .then(() => {
+        state.formError = i18next.t('loading');
+        return fetchAndParseRSS(url.trim());
+      })
+      .then((feedData) => {
+        state.feedsData = [...state.feedsData, { ...feedData, url: url.trim() }];
+        state.allPosts = state.feedsData.flatMap((feed) => feed.posts);
+        formElement.reset();
+        inputElement.focus();
+        resetFormState();
+        checkForUpdates(state);
+      })
+      .catch((error) => {
+        state.isFormProcessing = false;
+        if (error instanceof yup.ValidationError) {
+          state.formError = error.errors[0];
+        } else {
+          state.formError = error.message;
+        }
+      });
   };
 
   formElement.addEventListener('submit', validateAndSubmit);
