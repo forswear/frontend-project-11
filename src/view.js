@@ -75,18 +75,18 @@ export const renderPosts = (container, posts, readPosts) => {
 };
 
 export const renderFeeds = (container, feeds) => {
-  container.innerHTML = '';
-
-  if (feeds.length === 0) {
+  if (!container || feeds.length === 0) {
     return;
   }
+
+  container.innerHTML = '';
 
   const feedsHeader = document.createElement('h2');
   feedsHeader.textContent = 'Фиды';
   container.appendChild(feedsHeader);
 
   const feedsList = document.createElement('ul');
-  feedsList.classList.add('list-group', 'border-1', 'rounded-0');
+  feedsList.classList.add('list-group', 'border-0', 'rounded-0');
   container.appendChild(feedsList);
 
   feeds.forEach((feed) => {

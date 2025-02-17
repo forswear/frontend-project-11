@@ -30,20 +30,20 @@ const parseRSS = (xmlString) => {
   };
 };
 
-export const fetchAndParseRSS = async (url) => {
-  try {
-    const response = await axios.get('https://allorigins.hexlet.app/get', {
-      params: {
-        url,
-        disableCache: true,
-      },
-    });
+export const fetchAndParseRSS = (url) => {
+  return axios.get('https://allorigins.hexlet.app/get', {
+    params: {
+      url,
+      disableCache: true,
+    },
+    timeout: 10000,
+  }).then((response) => {
     const xmlString = response.data.contents;
     return parseRSS(xmlString);
-  } catch (error) {
+  }).catch((error) => {
     if (error.message.includes('Invalid RSS format')) {
-      throw new Error(error.message);
+      throw new Error(i18next.t('errors.invalidRss'));
     }
     throw new Error(i18next.t('errors.networkError'));
-  }
+  });
 };

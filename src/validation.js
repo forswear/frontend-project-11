@@ -126,7 +126,7 @@ export default function setupFormValidation({
         formElement.reset();
         inputElement.focus();
         resetFormState();
-  
+
         checkForUpdates(state);
       })
       .catch((error) => {
