@@ -9,6 +9,7 @@ const resources = {
       add: 'Add',
       example: 'Example: https://lorem-rss.hexlet.app/feed',
       loading: 'Loading...',
+      rssAdded: 'RSS successfully',
       errors: {
         required: 'Field must not be empty',
         invalidUrl: 'Invalid URL format',
@@ -21,7 +22,7 @@ const resources = {
   ru: {
     translation: {
       title: 'RSS Агрегатор',
-      description: 'Начните читать RSS сегодня! Это легко, это красиво.',
+      description: 'Начните читать RSS сегодня! Это легко и красиво.',
       label: 'Ссылка RSS',
       add: 'Добавить',
       example: 'Пример: https://lorem-rss.hexlet.app/feed',
@@ -32,7 +33,7 @@ const resources = {
         invalidUrl: 'Ссылка должна быть валидным URL',
         duplicateFeed: 'RSS уже существует',
         invalidRss: 'Ресурс не содержит валидный RSS',
-        networkErr: 'Ошибка сети',
+        networkError: 'Ошибка сети',
       },
     },
   },

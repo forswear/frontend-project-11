@@ -13,6 +13,7 @@ export const createState = (feedsContainer, postsContainer, feedbackElement, inp
     isUpdating: false,
     currentPost: null,
     isFormProcessing: false,
+    successMessage: null,
   };
 
   const state = onChange(initialState, (path, value) => {
@@ -41,6 +42,15 @@ export const createState = (feedsContainer, postsContainer, feedbackElement, inp
         inputElement.setAttribute('readonly', true);
       } else {
         inputElement.removeAttribute('readonly');
+      }
+    }
+    if (path === 'successMessage') {
+      if (value) {
+        feedbackElement.textContent = value;
+        feedbackElement.classList.remove('text-danger');
+        feedbackElement.classList.add('text-success');
+      } else {
+        feedbackElement.textContent = '';
       }
     }
   });
@@ -124,7 +134,7 @@ export default function setupFormValidation({
     state.isFormProcessing = false;
   };
 
-  const validateAndSubmit = (event) => {
+  const validateAndSubmit = async (event) => {
     event.preventDefault();
     resetFormState();
     state.isFormProcessing = true;
@@ -132,27 +142,25 @@ export default function setupFormValidation({
     const formData = new FormData(formElement);
     const { url } = Object.fromEntries(formData.entries());
 
-    validationSchema.validate({ url }, { abortEarly: false })
-      .then(() => {
-        state.formError = i18next.t('loading');
-        return fetchAndParseRSS(url.trim());
-      })
-      .then((feedData) => {
-        state.feedsData = [...state.feedsData, { ...feedData, url: url.trim() }];
-        state.allPosts = state.feedsData.flatMap((feed) => feed.posts);
-        formElement.reset();
-        inputElement.focus();
-        resetFormState();
-        checkForUpdates(state);
-      })
-      .catch((error) => {
-        state.isFormProcessing = false;
-        if (error instanceof yup.ValidationError) {
-          state.formError = error.errors[0];
-        } else {
-          state.formError = error.message;
-        }
-      });
+    try {
+      await validationSchema.validate({ url }, { abortEarly: false });
+      state.formError = i18next.t('loading');
+      const feedData = await fetchAndParseRSS(url.trim());
+      state.feedsData = [...state.feedsData, { ...feedData, url: url.trim() }];
+      state.allPosts = state.feedsData.flatMap((feed) => feed.posts);
+      formElement.reset();
+      inputElement.focus();
+      resetFormState();
+      state.successMessage = i18next.t('rssAdded'); // Устанавливаем сообщение об успехе
+      checkForUpdates(state);
+    } catch (error) {
+      state.isFormProcessing = false;
+      if (error instanceof yup.ValidationError) {
+        state.formError = error.errors[0];
+      } else {
+        state.formError = error.message;
+      }
+    }
   };
 
   formElement.addEventListener('submit', validateAndSubmit);
