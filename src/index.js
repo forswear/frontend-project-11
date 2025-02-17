@@ -1,4 +1,5 @@
 import './style.scss';
+import 'bootstrap';
 import setupFormValidation from './validation';
 import { initI18n } from './locales/i18n';
 
