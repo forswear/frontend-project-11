@@ -1,7 +1,7 @@
 import './style.scss';
 import 'bootstrap';
-import setupFormValidation from './validation';
-import { initI18n } from './locales/i18n';
+import setupFormValidation from './validation.js';
+import { initI18n } from './locales/i18n.js';
 
 initI18n(() => {
   document.addEventListener('DOMContentLoaded', () => {

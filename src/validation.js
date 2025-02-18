@@ -1,8 +1,8 @@
-import { fetchAndParseRSS } from './rss-parser';
 import * as yup from 'yup';
-import i18next from './locales/i18n';
 import onChange from 'on-change';
-import { renderPosts, renderFeeds, renderModal } from './view';
+import { fetchAndParseRSS } from './rss-parser.js';
+import i18next from './locales/i18n.js';
+import { renderPosts, renderFeeds, renderModal } from './view.js';
 
 export const createState = (feedsContainer, postsContainer, feedbackElement, inputElement) => {
   const initialState = {
@@ -71,21 +71,20 @@ function checkForUpdates(state) {
     fetchAndParseRSS(feed.url)
       .then((newFeedData) => {
         const newPosts = newFeedData.posts.filter(
-          (post) => !feed.posts.some((existingPost) => existingPost.id === post.id)
+          (post) => !feed.posts.some((existingPost) => existingPost.id === post.id),
         );
         if (newPosts.length > 0) {
           feed.posts.push(...newPosts);
 
-          const uniquePosts = Array.from(new Set(state.allPosts.map(post => post.id)))
-            .map(id => state.allPosts.find(post => post.id === id));
+          const uniquePosts = Array.from(new Set(state.allPosts.map((post) => post.id)))
+            .map((id) => state.allPosts.find((post) => post.id === id));
 
           state.allPosts = uniquePosts;
         }
       })
       .catch((error) => {
         console.error(`Ошибка при обновлении фида "${feed.title}":`, error.message);
-      })
-  );
+      }));
 
   Promise.all(updatePromises).then(() => {
     state.isUpdating = false;
@@ -128,9 +127,8 @@ export default function setupFormValidation({
       .trim()
       .required(i18next.t('errors.required'))
       .url(i18next.t('errors.invalidUrl'))
-      .test('is-unique', i18next.t('errors.duplicateFeed'), (value) => {
-        return !state.feedsData.some((feed) => feed.url === value.trim());
-      }),
+      .test('is-unique', i18next.t('errors.duplicateFeed'), (value) =>
+        !state.feedsData.some((feed) => feed.url === value.trim())),
   });
 
   const resetFormState = () => {
@@ -142,22 +140,22 @@ export default function setupFormValidation({
     event.preventDefault();
     resetFormState();
     state.isFormProcessing = true;
-  
+
     const formData = new FormData(formElement);
     const { url } = Object.fromEntries(formData.entries());
-  
+
     try {
       await validationSchema.validate({ url }, { abortEarly: false });
       state.formError = i18next.t('loading');
       const feedData = await fetchAndParseRSS(url.trim());
-  
+
       const uniquePosts = feedData.posts.filter(
-        (post) => !state.allPosts.some((existingPost) => existingPost.id === post.id)
+        (post) => !state.allPosts.some((existingPost) => existingPost.id === post.id),
       );
-  
+
       state.feedsData = [...state.feedsData, { ...feedData, url: url.trim(), posts: uniquePosts }];
       state.allPosts = state.feedsData.flatMap((feed) => feed.posts);
-  
+
       formElement.reset();
       inputElement.focus();
       resetFormState();

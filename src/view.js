@@ -24,8 +24,8 @@ export const renderPosts = (container, posts, readPosts) => {
   const postsList = container.querySelector('ul');
   postsList.innerHTML = '';
 
-  const uniquePosts = Array.from(new Set(posts.map(post => post.id)))
-    .map(id => posts.find(post => post.id === id));
+  const uniquePosts = Array.from(new Set(posts.map((post) => post.id)))
+    .map((id) => posts.find((post) => post.id === id));
 
   const sortedPosts = uniquePosts.sort((a, b) => {
     const dateA = a.pubDate ? new Date(a.pubDate) : new Date(0);
@@ -42,7 +42,7 @@ export const renderPosts = (container, posts, readPosts) => {
       'justify-content-between',
       'align-items-start',
       'border-0',
-      'border-end-0'
+      'border-end-0',
     );
 
     const postLink = document.createElement('a');

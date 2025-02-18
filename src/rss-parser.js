@@ -1,5 +1,5 @@
 import axios from 'axios';
-import i18next from './locales/i18n';
+import i18next from './locales/i18n.js';
 
 const parseRSS = (xmlString) => {
   const parser = new DOMParser();
@@ -7,7 +7,7 @@ const parseRSS = (xmlString) => {
   const parseError = xmlDoc.querySelector('parsererror');
 
   if (parseError) {
-    throw new Error(i18next.t('errors.invalidRss')); // Ошибка парсинга RSS
+    throw new Error(i18next.t('errors.invalidRss'));
   }
 
   const channel = xmlDoc.querySelector('channel');
@@ -30,31 +30,29 @@ const parseRSS = (xmlString) => {
   };
 };
 
-export const fetchAndParseRSS = (url) => {
-  return axios.get('https://allorigins.hexlet.app/get', {
-    params: {
-      url,
-      disableCache: true,
-    },
-  })
-    .then((response) => {
-      const xmlString = response.data.contents;
-      try {
-        return parseRSS(xmlString);
-      } catch (error) {
-        if (error.message === i18next.t('errors.invalidRss')) {
-          throw new Error(i18next.t('errors.invalidRss'));
-        }
-        throw new Error(i18next.t('errors.networkError'));
-      }
-    })
-    .catch((error) => {
-      if (error.response && error.response.status === 404) {
-        throw new Error(i18next.t('errors.invalidUrl'));
-      }
+export const fetchAndParseRSS = (url) => axios.get('https://allorigins.hexlet.app/get', {
+  params: {
+    url,
+    disableCache: true,
+  },
+})
+  .then((response) => {
+    const xmlString = response.data.contents;
+    try {
+      return parseRSS(xmlString);
+    } catch (error) {
       if (error.message === i18next.t('errors.invalidRss')) {
-        throw error;
+        throw new Error(i18next.t('errors.invalidRss'));
       }
       throw new Error(i18next.t('errors.networkError'));
-    });
-};
+    }
+  })
+  .catch((error) => {
+    if (error.response && error.response.status === 404) {
+      throw new Error(i18next.t('errors.invalidUrl'));
+    }
+    if (error.message === i18next.t('errors.invalidRss')) {
+      throw error;
+    }
+    throw new Error(i18next.t('errors.networkError'));
+  });
