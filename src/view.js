@@ -44,6 +44,7 @@ export const renderPosts = (container, posts, readPosts) => {
 
     const postLink = document.createElement('a');
     postLink.href = post.link;
+    postLink.id = `post-${post.id}`;
     postLink.classList.add(readPosts.has(post.id) ? 'fw-normal' : 'fw-bold');
     postLink.dataset.id = post.id;
     postLink.target = '_blank';
