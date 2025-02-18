@@ -75,7 +75,11 @@ function checkForUpdates(state) {
         );
         if (newPosts.length > 0) {
           feed.posts.push(...newPosts);
-          state.allPosts = state.feedsData.flatMap((feed) => feed.posts);
+
+          const uniquePosts = Array.from(new Set(state.allPosts.map(post => post.id)))
+            .map(id => state.allPosts.find(post => post.id === id));
+
+          state.allPosts = uniquePosts;
         }
       })
       .catch((error) => {
@@ -146,8 +150,14 @@ export default function setupFormValidation({
       await validationSchema.validate({ url }, { abortEarly: false });
       state.formError = i18next.t('loading');
       const feedData = await fetchAndParseRSS(url.trim());
-      state.feedsData = [...state.feedsData, { ...feedData, url: url.trim() }];
+  
+      const uniquePosts = feedData.posts.filter(
+        (post) => !state.allPosts.some((existingPost) => existingPost.id === post.id)
+      );
+  
+      state.feedsData = [...state.feedsData, { ...feedData, url: url.trim(), posts: uniquePosts }];
       state.allPosts = state.feedsData.flatMap((feed) => feed.posts);
+  
       formElement.reset();
       inputElement.focus();
       resetFormState();
@@ -161,7 +171,7 @@ export default function setupFormValidation({
         state.formError = error.message;
       }
     }
-  }; 
+  };
 
   formElement.addEventListener('submit', validateAndSubmit);
   inputElement.addEventListener('input', resetFormState);

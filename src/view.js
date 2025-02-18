@@ -24,7 +24,10 @@ export const renderPosts = (container, posts, readPosts) => {
   const postsList = container.querySelector('ul');
   postsList.innerHTML = '';
 
-  const sortedPosts = posts.sort((a, b) => {
+  const uniquePosts = Array.from(new Set(posts.map(post => post.id)))
+    .map(id => posts.find(post => post.id === id));
+
+  const sortedPosts = uniquePosts.sort((a, b) => {
     const dateA = a.pubDate ? new Date(a.pubDate) : new Date(0);
     const dateB = b.pubDate ? new Date(b.pubDate) : new Date(0);
     return dateB - dateA;
