@@ -24,12 +24,12 @@ module.exports = {
             loader: 'sass-loader',
             options: {
               sassOptions: {
-                quietDeps: true
-              }
-            }
-          }
-        ]
-      }
+                quietDeps: true,
+              },
+            },
+          },
+        ],
+      },
     ],
   },
   plugins: [

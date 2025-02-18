@@ -11,17 +11,18 @@ export const renderModal = (post) => {
 };
 
 export const renderPosts = (container, posts, readPosts) => {
-  if (container.innerHTML === '') {
+  const postsContainer = container;
+  if (postsContainer.innerHTML === '') {
     const postsHeader = document.createElement('h2');
     postsHeader.textContent = 'Посты';
-    container.appendChild(postsHeader);
+    postsContainer.appendChild(postsHeader);
 
     const postsList = document.createElement('ul');
     postsList.classList.add('list-group', 'border-0', 'rounded-0');
-    container.appendChild(postsList);
+    postsContainer.appendChild(postsList);
   }
 
-  const postsList = container.querySelector('ul');
+  const postsList = postsContainer.querySelector('ul');
   postsList.innerHTML = '';
 
   const uniquePosts = Array.from(new Set(posts.map((post) => post.id)))
@@ -69,7 +70,8 @@ export const renderPosts = (container, posts, readPosts) => {
 };
 
 export const renderFeeds = (container, feeds) => {
-  container.innerHTML = '';
+  const feedsContainer = container;
+  feedsContainer.innerHTML = '';
 
   if (feeds.length === 0) {
     return;
@@ -77,11 +79,11 @@ export const renderFeeds = (container, feeds) => {
 
   const feedsHeader = document.createElement('h2');
   feedsHeader.textContent = 'Фиды';
-  container.appendChild(feedsHeader);
+  feedsContainer.appendChild(feedsHeader);
 
   const feedsList = document.createElement('ul');
   feedsList.classList.add('list-group', 'border-0', 'rounded-0');
-  container.appendChild(feedsList);
+  feedsContainer.appendChild(feedsList);
 
   feeds.forEach((feed) => {
     const feedItem = document.createElement('li');

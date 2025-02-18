@@ -30,7 +30,7 @@ const parseRSS = (xmlString) => {
   };
 };
 
-export const fetchAndParseRSS = (url) => axios.get('https://allorigins.hexlet.app/get', {
+const fetchAndParseRSS = (url) => axios.get('https://allorigins.hexlet.app/get', {
   params: {
     url,
     disableCache: true,
@@ -56,3 +56,5 @@ export const fetchAndParseRSS = (url) => axios.get('https://allorigins.hexlet.ap
     }
     throw new Error(i18next.t('errors.networkError'));
   });
+
+export default fetchAndParseRSS;

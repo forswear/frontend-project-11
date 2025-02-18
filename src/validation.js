@@ -1,6 +1,6 @@
 import * as yup from 'yup';
 import onChange from 'on-change';
-import { fetchAndParseRSS } from './rss-parser.js';
+import fetchAndParseRSS from './rss-parser.js';
 import i18next from './locales/i18n.js';
 import { renderPosts, renderFeeds, renderModal } from './view.js';
 
@@ -26,11 +26,12 @@ export const createState = (feedsContainer, postsContainer, feedbackElement, inp
       renderPosts(postsContainer, state.allPosts, state.readPosts);
     }
     if (path === 'formError') {
+      const feedbackEl = feedbackElement;
       if (value) {
-        feedbackElement.textContent = value;
+        feedbackEl.textContent = value;
         inputElement.classList.add('is-invalid');
       } else {
-        feedbackElement.textContent = '';
+        feedbackEl.textContent = '';
         inputElement.classList.remove('is-invalid');
       }
     }
@@ -45,12 +46,13 @@ export const createState = (feedsContainer, postsContainer, feedbackElement, inp
       }
     }
     if (path === 'successMessage') {
+      const feedbackEl = feedbackElement;
       if (value) {
-        feedbackElement.textContent = value;
-        feedbackElement.classList.remove('text-danger');
-        feedbackElement.classList.add('text-success');
+        feedbackEl.textContent = value;
+        feedbackEl.classList.remove('text-danger');
+        feedbackEl.classList.add('text-success');
       } else {
-        feedbackElement.textContent = '';
+        feedbackEl.textContent = '';
       }
     }
   });
@@ -65,30 +67,30 @@ function checkForUpdates(state) {
     return;
   }
 
-  state.isUpdating = true;
+  const currentState = state;
+  currentState.isUpdating = true;
 
-  const updatePromises = state.feedsData.map((feed) =>
-    fetchAndParseRSS(feed.url)
-      .then((newFeedData) => {
-        const newPosts = newFeedData.posts.filter(
-          (post) => !feed.posts.some((existingPost) => existingPost.id === post.id),
-        );
-        if (newPosts.length > 0) {
-          feed.posts.push(...newPosts);
+  const updatePromises = currentState.feedsData.map((feed) => fetchAndParseRSS(feed.url)
+    .then((newFeedData) => {
+      const newPosts = newFeedData.posts.filter(
+        (post) => !feed.posts.some((existingPost) => existingPost.id === post.id),
+      );
+      if (newPosts.length > 0) {
+        feed.posts.push(...newPosts);
 
-          const uniquePosts = Array.from(new Set(state.allPosts.map((post) => post.id)))
-            .map((id) => state.allPosts.find((post) => post.id === id));
+        const uniquePosts = Array.from(new Set(currentState.allPosts.map((post) => post.id)))
+          .map((id) => currentState.allPosts.find((post) => post.id === id));
 
-          state.allPosts = uniquePosts;
-        }
-      })
-      .catch((error) => {
-        console.error(`Ошибка при обновлении фида "${feed.title}":`, error.message);
-      }));
+        currentState.allPosts = uniquePosts;
+      }
+    })
+    .catch((error) => {
+      console.error(`Ошибка при обновлении фида "${feed.title}":`, error.message);
+    }));
 
   Promise.all(updatePromises).then(() => {
-    state.isUpdating = false;
-    setTimeout(() => checkForUpdates(state), updateInterval);
+    currentState.isUpdating = false;
+    setTimeout(() => checkForUpdates(currentState), updateInterval);
   });
 }
 
@@ -99,10 +101,11 @@ const setupPostViewHandler = (postsContainer, state) => {
       const post = state.allPosts.find((p) => p.id === postId);
 
       if (post) {
-        state.currentPost = post;
-        state.readPosts.add(postId);
+        const currentState = state;
+        currentState.currentPost = post;
+        currentState.readPosts.add(postId);
 
-        const postLink = postsContainer.querySelector(`a[data-id="${postId}"]`);
+        const [postLink] = [postsContainer.querySelector(`a[data-id="${postId}"]`)];
         if (postLink) {
           postLink.classList.remove('fw-bold');
           postLink.classList.add('fw-normal');
@@ -127,8 +130,7 @@ export default function setupFormValidation({
       .trim()
       .required(i18next.t('errors.required'))
       .url(i18next.t('errors.invalidUrl'))
-      .test('is-unique', i18next.t('errors.duplicateFeed'), (value) =>
-        !state.feedsData.some((feed) => feed.url === value.trim())),
+      .test('is-unique', i18next.t('errors.duplicateFeed'), (value) => !state.feedsData.some((feed) => feed.url === value.trim())),
   });
 
   const resetFormState = () => {
@@ -164,13 +166,13 @@ export default function setupFormValidation({
     } catch (error) {
       state.isFormProcessing = false;
       if (error instanceof yup.ValidationError) {
-        state.formError = error.errors[0];
+        const [firstError] = error.errors;
+        state.formError = firstError;
       } else {
         state.formError = error.message;
       }
     }
   };
-
   formElement.addEventListener('submit', validateAndSubmit);
   inputElement.addEventListener('input', resetFormState);
   setupPostViewHandler(postsContainer, state);
