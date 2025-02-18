@@ -7,7 +7,7 @@ const parseRSS = (xmlString) => {
   const parseError = xmlDoc.querySelector('parsererror');
 
   if (parseError) {
-    throw new Error(i18next.t('errors.invalidRss'));
+    throw new Error(i18next.t('errors.invalidRss')); // Ошибка парсинга RSS
   }
 
   const channel = xmlDoc.querySelector('channel');
@@ -36,16 +36,25 @@ export const fetchAndParseRSS = (url) => {
       url,
       disableCache: true,
     },
-    timeout: 5000,
   })
     .then((response) => {
       const xmlString = response.data.contents;
-      return parseRSS(xmlString);
+      try {
+        return parseRSS(xmlString);
+      } catch (error) {
+        if (error.message === i18next.t('errors.invalidRss')) {
+          throw new Error(i18next.t('errors.invalidRss'));
+        }
+        throw new Error(i18next.t('errors.networkError'));
+      }
     })
     .catch((error) => {
-      if (error.message.includes('Invalid RSS format')) {
-        throw new Error(error.message);
+      if (error.response && error.response.status === 404) {
+        throw new Error(i18next.t('errors.invalidUrl'));
       }
-      throw new Error(i18next.t('errors.invalidRss'));
+      if (error.message === i18next.t('errors.invalidRss')) {
+        throw error;
+      }
+      throw new Error(i18next.t('errors.networkError'));
     });
 };

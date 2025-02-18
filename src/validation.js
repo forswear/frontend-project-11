@@ -158,7 +158,7 @@ export default function setupFormValidation({
       if (error instanceof yup.ValidationError) {
         state.formError = error.errors[0];
       } else {
-        state.formError = error.message; // Здесь ошибка будет передана в состояние
+        state.formError = error.message;
       }
     }
   }; 
