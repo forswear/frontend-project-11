@@ -16,7 +16,7 @@ const parseRSS = (xmlString) => {
 
   const items = Array.from(channel.querySelectorAll('item')).map((item) => ({
     id: crypto.randomUUID(),
-    title: item.querySelector('title')?.textContent || 'No Title',
+    title: item.querySelector('title')?.textContent || 'Нет заголовка',
     link: item.querySelector('link')?.textContent || '#',
     pubDate: item.querySelector('pubDate')?.textContent || '',
     description: item.querySelector('description')?.textContent || 'Описание отсутствует',

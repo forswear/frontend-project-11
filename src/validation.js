@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import * as yup from 'yup';
 import onChange from 'on-change';
 import fetchAndParseRSS from './rss-parser.js';
@@ -18,7 +19,7 @@ export const createState = (feedsContainer, postsContainer, feedbackElement, inp
 
   const state = onChange(initialState, (path, value) => {
     if (path === 'feedsData') {
-      state.allPosts = state.feedsData.flatMap((feed) => feed.posts);
+      state.allPosts = state.feedsData.flatMap((feedItem) => feedItem.posts);
       renderFeeds(feedsContainer, state.feedsData);
       renderPosts(postsContainer, state.allPosts, state.readPosts);
     }
@@ -36,7 +37,10 @@ export const createState = (feedsContainer, postsContainer, feedbackElement, inp
       }
     }
     if (path === 'currentPost') {
-      renderModal(state.currentPost);
+      renderModal(value);
+      if (value) {
+        state.readPosts.add(value.id);
+      }
     }
     if (path === 'isFormProcessing') {
       if (value) {
@@ -67,30 +71,25 @@ function checkForUpdates(state) {
     return;
   }
 
-  const currentState = state;
-  currentState.isUpdating = true;
+  const updatedState = { ...state, isUpdating: true };
 
-  const updatePromises = currentState.feedsData.map((feed) => fetchAndParseRSS(feed.url)
+  const updatePromises = updatedState.feedsData.map((feedItem) => fetchAndParseRSS(feedItem.url)
     .then((newFeedData) => {
       const newPosts = newFeedData.posts.filter(
-        (post) => !feed.posts.some((existingPost) => existingPost.id === post.id),
+        (post) => !feedItem.posts.some((existingPost) => existingPost.id === post.id),
       );
       if (newPosts.length > 0) {
-        feed.posts.push(...newPosts);
-
-        const uniquePosts = Array.from(new Set(currentState.allPosts.map((post) => post.id)))
-          .map((id) => currentState.allPosts.find((post) => post.id === id));
-
-        currentState.allPosts = uniquePosts;
+        feedItem.posts.push(...newPosts);
+        updatedState.allPosts = updatedState.feedsData.flatMap((feed) => feed.posts);
       }
     })
     .catch((error) => {
-      console.error(`Ошибка при обновлении фида "${feed.title}":`, error.message);
+      console.error(`Ошибка при обновлении фида "${feedItem.title}":`, error.message);
     }));
 
   Promise.all(updatePromises).then(() => {
-    currentState.isUpdating = false;
-    setTimeout(() => checkForUpdates(currentState), updateInterval);
+    updatedState.isUpdating = false;
+    setTimeout(() => checkForUpdates(updatedState), updateInterval);
   });
 }
 
@@ -101,15 +100,7 @@ const setupPostViewHandler = (postsContainer, state) => {
       const post = state.allPosts.find((p) => p.id === postId);
 
       if (post) {
-        const currentState = state;
-        currentState.currentPost = post;
-        currentState.readPosts.add(postId);
-
-        const [postLink] = [postsContainer.querySelector(`a[data-id="${postId}"]`)];
-        if (postLink) {
-          postLink.classList.remove('fw-bold');
-          postLink.classList.add('fw-normal');
-        }
+        state.currentPost = post;
       }
     }
   });
@@ -162,7 +153,6 @@ export default function setupFormValidation({
       inputElement.focus();
       resetFormState();
       state.successMessage = i18next.t('rssAdded');
-      checkForUpdates(state);
     } catch (error) {
       state.isFormProcessing = false;
       if (error instanceof yup.ValidationError) {
@@ -173,7 +163,9 @@ export default function setupFormValidation({
       }
     }
   };
+
   formElement.addEventListener('submit', validateAndSubmit);
   inputElement.addEventListener('input', resetFormState);
   setupPostViewHandler(postsContainer, state);
+  checkForUpdates(state);
 }

@@ -39,12 +39,10 @@ const resources = {
   },
 };
 
-export const initI18n = (callback) => {
-  i18next.init({
-    lng: 'ru',
-    fallbackLng: 'en',
-    resources,
-  }, callback);
-};
+export const initI18n = () => i18next.init({
+  lng: 'ru',
+  fallbackLng: 'en',
+  resources,
+});
 
 export default i18next;
